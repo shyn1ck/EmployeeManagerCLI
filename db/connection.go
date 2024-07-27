@@ -10,22 +10,18 @@ var dbConn *sql.DB
 
 func ConnectToDB() error {
 	connStr := "user=postgres password=2003 dbname=employee_manager_cli_db sslmode=disable"
-	db, err := sql.Open("postgres", connStr)
-	if err != nil {
-		return err
-	}
-	fmt.Println("Connected to database")
-
-	dbConn = db
-	return nil
-}
-
-func CloseDBConn() error {
-	err := dbConn.Close()
+	var err error
+	dbConn, err = sql.Open("postgres", connStr)
 	if err != nil {
 		return err
 	}
 
+	err = dbConn.Ping()
+	if err != nil {
+		return err
+	}
+
+	fmt.Println("Successfully connected to database.")
 	return nil
 }
 

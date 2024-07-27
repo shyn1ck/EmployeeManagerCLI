@@ -16,255 +16,195 @@ func main() {
 		os.Exit(1)
 	}
 
-	checkIfTableExists()
-
 	for {
-		choice := displayMenuAndGetChoice()
-		handleChoice(choice)
+		choice := DisplayMenuAndGetChoice()
+		HandleChoice(choice)
 	}
 }
 
-func displayMenuAndGetChoice() int {
-	fmt.Println("Employee Manager CLI")
-	fmt.Println("1. Create Employee")
-	fmt.Println("2. Get All Employees")
-	fmt.Println("3. Get Employee by ID")
-	fmt.Println("4. Update Employee")
-	fmt.Println("5. Delete Employee")
-	fmt.Println("6. Exit")
+func DisplayMenuAndGetChoice() int {
+	fmt.Println("Choose an action:")
+	fmt.Println("1. Add employee")
+	fmt.Println("2. Get employee by ID")
+	fmt.Println("3. Update employee")
+	fmt.Println("4. Delete employee")
+	fmt.Println("5. Show all employees")
+	fmt.Println("6. Create employees table")
+	fmt.Println("7. Insert initial data")
+	fmt.Println("8. Drop Table ")
+	fmt.Println("9. Exit")
 
 	var choice int
-	fmt.Print("Enter your choice: ")
+	fmt.Print("Enter the action number: ")
 	_, err := fmt.Scan(&choice)
 	if err != nil {
-		fmt.Println("Invalid choice. Please enter a number between 1 and 6.")
-		return 0
+		fmt.Println("Error in input. Try again.")
+		return DisplayMenuAndGetChoice()
 	}
+
 	return choice
 }
 
-func handleChoice(choice int) {
+func HandleChoice(choice int) {
 	switch choice {
 	case 1:
-		createEmployee()
+		AddEmployee()
 	case 2:
-		getAllEmployees()
+		GetEmployeeByID()
 	case 3:
-		getEmployeeByID()
+		UpdateEmployee()
 	case 4:
-		updateEmployee()
+		DeleteEmployee()
 	case 5:
-		deleteEmployee()
+		listAllEmployees()
 	case 6:
-		fmt.Println("Exiting...")
+		CreateTable()
+	case 7:
+		InsertInitialData()
+	case 8:
+		DropTable()
+	case 9:
+		fmt.Println("Exiting program.")
 		os.Exit(0)
 	default:
-		fmt.Println("Invalid choice. Please try again.")
+		fmt.Println("Invalid choice. Try again.")
 	}
 }
 
-func checkIfTableExists() {
-	rows, err := db.GetDBConn().Query("SELECT to_regclass('public.employees');")
+func CreateTable() {
+	err := db.CreateEmployeesTable()
 	if err != nil {
-		fmt.Println("Error during checking table existence. Error:", err)
-		return
-	}
-	defer rows.Close()
-
-	var tableName *string
-	if rows.Next() {
-		err := rows.Scan(&tableName)
-		if err != nil {
-			fmt.Println("Error during scanning. Error:", err)
-			return
-		}
-	}
-
-	if tableName == nil {
-		fmt.Println("Table 'employees' does not exist.")
+		fmt.Println("Error creating table. Error:", err)
 	} else {
-		fmt.Println("Table 'employees' exists.")
+		fmt.Println("Table 'employees' created successfully.")
 	}
 }
 
-func createEmployee() {
-	e := models.Employee{}
-
-	fmt.Print("Enter first name: ")
-	_, err := fmt.Scan(&e.FirstName)
+func InsertInitialData() {
+	err := db.InsertInitialData()
 	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
+		fmt.Println("Error inserting initial data. Error:", err)
+	} else {
+		fmt.Println("Initial data inserted successfully.")
 	}
-
-	fmt.Print("Enter last name: ")
-	_, err = fmt.Scan(&e.LastName)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter email: ")
-	_, err = fmt.Scan(&e.Email)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter phone: ")
-	_, err = fmt.Scan(&e.Phone)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter position: ")
-	_, err = fmt.Scan(&e.Position)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter department: ")
-	_, err = fmt.Scan(&e.Department)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter salary: ")
-	_, err = fmt.Scan(&e.Salary)
-	if err != nil {
-		fmt.Println("Invalid salary input. Error:", err)
-		return
-	}
-
-	e.HireDate = time.Now()
-	e.IsActive = true
-
-	err = repository.CreateEmployee(e)
-	if err != nil {
-		fmt.Println("Error during insertion. Error:", err)
-		return
-	}
-	fmt.Println("Employee created successfully.")
 }
 
-func getAllEmployees() {
+func AddEmployee() {
+	var emp models.Employee
+	fmt.Println("Enter employee details:")
+
+	fmt.Print("First Name: ")
+	fmt.Scan(&emp.FirstName)
+	fmt.Print("Last Name: ")
+	fmt.Scan(&emp.LastName)
+	fmt.Print("Email: ")
+	fmt.Scan(&emp.Email)
+	fmt.Print("Phone: ")
+	fmt.Scan(&emp.Phone)
+	fmt.Print("Position: ")
+	fmt.Scan(&emp.Position)
+	fmt.Print("Department: ")
+	fmt.Scan(&emp.Department)
+	fmt.Print("Salary: ")
+	fmt.Scan(&emp.Salary)
+	fmt.Print("Hire Date (YYYY-MM-DD): ")
+	var hireDate string
+	fmt.Scan(&hireDate)
+	emp.HireDate, _ = time.Parse("2006-01-02", hireDate)
+	fmt.Print("Active (true/false): ")
+	fmt.Scan(&emp.IsActive)
+
+	err := repository.CreateEmployee(emp)
+	if err != nil {
+		fmt.Println("Error adding employee. Error:", err)
+	} else {
+		fmt.Println("Employee added successfully.")
+	}
+}
+
+func GetEmployeeByID() {
+	fmt.Print("Enter employee ID: ")
+	var id int
+	fmt.Scan(&id)
+
+	employee, err := repository.GetEmployeeByID(id)
+	if err != nil {
+		fmt.Println("Error getting employee. Error:", err)
+	} else if (employee == models.Employee{}) {
+		fmt.Println("Employee with this ID not found.")
+	} else {
+		fmt.Printf("ID: %d\nFirst Name: %s\nLast Name: %s\nEmail: %s\nPhone: %s\nPosition: %s\nDepartment: %s\nSalary: %.2f\nHire Date: %s\nActive: %t\n",
+			employee.ID, employee.FirstName, employee.LastName, employee.Email, employee.Phone, employee.Position, employee.Department, employee.Salary, employee.HireDate.Format("2006-01-02"), employee.IsActive)
+	}
+}
+
+func UpdateEmployee() {
+	var emp models.Employee
+	fmt.Print("Enter employee ID to update: ")
+	fmt.Scan(&emp.ID)
+
+	fmt.Println("Enter new employee details:")
+
+	fmt.Print("First Name: ")
+	fmt.Scan(&emp.FirstName)
+	fmt.Print("Last Name: ")
+	fmt.Scan(&emp.LastName)
+	fmt.Print("Email: ")
+	fmt.Scan(&emp.Email)
+	fmt.Print("Phone: ")
+	fmt.Scan(&emp.Phone)
+	fmt.Print("Position: ")
+	fmt.Scan(&emp.Position)
+	fmt.Print("Department: ")
+	fmt.Scan(&emp.Department)
+	fmt.Print("Salary: ")
+	fmt.Scan(&emp.Salary)
+	fmt.Print("Hire Date (YYYY-MM-DD): ")
+	var hireDate string
+	fmt.Scan(&hireDate)
+	emp.HireDate, _ = time.Parse("2006-01-02", hireDate)
+	fmt.Print("Active (true/false): ")
+	fmt.Scan(&emp.IsActive)
+
+	err := repository.UpdateEmployeeByID(emp)
+	if err != nil {
+		fmt.Println("Error updating employee. Error:", err)
+	} else {
+		fmt.Println("Employee updated successfully.")
+	}
+}
+
+func DeleteEmployee() {
+	fmt.Print("Enter employee ID to delete: ")
+	var id int
+	fmt.Scan(&id)
+
+	err := repository.DeleteEmployeeByID(id)
+	if err != nil {
+		fmt.Println("Error deleting employee. Error:", err)
+	} else {
+		fmt.Println("Employee deleted successfully.")
+	}
+}
+
+func DropTable() {
+	err := repository.DropEmployeesTable()
+	if err != nil {
+		fmt.Println("Error dropping table. Error:", err)
+	} else {
+		fmt.Println("Table 'employees' has been dropped.")
+	}
+}
+func listAllEmployees() {
 	employees, err := repository.GetAllEmployees()
 	if err != nil {
-		fmt.Println("Error during query. Error:", err)
-		return
+		fmt.Println("Error getting list of employees. Error:", err)
+	} else if len(employees) == 0 {
+		fmt.Println("Employee list is empty.")
+	} else {
+		for _, emp := range employees {
+			fmt.Printf("ID: %d\nFirst Name: %s\nLast Name: %s\nEmail: %s\nPhone: %s\nPosition: %s\nDepartment: %s\nSalary: %.2f\nHire Date: %s\nActive: %t\n\n",
+				emp.ID, emp.FirstName, emp.LastName, emp.Email, emp.Phone, emp.Position, emp.Department, emp.Salary, emp.HireDate.Format("2006-01-02"), emp.IsActive)
+		}
 	}
-	if len(employees) == 0 {
-		fmt.Println("No employees found.")
-		return
-	}
-	for _, e := range employees {
-		fmt.Printf("%+v\n", e)
-	}
-}
-
-func getEmployeeByID() {
-	var id int
-	fmt.Print("Enter employee ID: ")
-	_, err := fmt.Scan(&id)
-	if err != nil {
-		fmt.Println("Invalid ID input. Error:", err)
-		return
-	}
-
-	e, err := repository.GetEmployeeByID(id)
-	if err != nil {
-		fmt.Println("Error during query. Error:", err)
-		return
-	}
-	fmt.Printf("Employee: %+v\n", e)
-}
-
-func updateEmployee() {
-	e := models.Employee{}
-
-	fmt.Print("Enter employee ID to update: ")
-	_, err := fmt.Scan(&e.ID)
-	if err != nil {
-		fmt.Println("Invalid ID input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter new first name: ")
-	_, err = fmt.Scan(&e.FirstName)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter new last name: ")
-	_, err = fmt.Scan(&e.LastName)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter new email: ")
-	_, err = fmt.Scan(&e.Email)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter new phone: ")
-	_, err = fmt.Scan(&e.Phone)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter new position: ")
-	_, err = fmt.Scan(&e.Position)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter new department: ")
-	_, err = fmt.Scan(&e.Department)
-	if err != nil {
-		fmt.Println("Error reading input. Error:", err)
-		return
-	}
-
-	fmt.Print("Enter new salary: ")
-	_, err = fmt.Scan(&e.Salary)
-	if err != nil {
-		fmt.Println("Invalid salary input. Error:", err)
-		return
-	}
-
-	e.HireDate = time.Now()
-	e.IsActive = true
-
-	err = repository.UpdateEmployeeByID(e)
-	if err != nil {
-		fmt.Println("Error during update. Error:", err)
-		return
-	}
-	fmt.Println("Employee updated successfully.")
-}
-
-func deleteEmployee() {
-	var id int
-	fmt.Print("Enter employee ID to delete: ")
-	_, err := fmt.Scan(&id)
-	if err != nil {
-		fmt.Println("Invalid ID input. Error:", err)
-		return
-	}
-
-	err = repository.DeleteEmployeeByID(id)
-	if err != nil {
-		fmt.Println("Error during delete. Error:", err)
-		return
-	}
-	fmt.Println("Employee deleted successfully.")
 }
