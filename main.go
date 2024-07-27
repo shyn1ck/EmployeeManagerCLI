@@ -23,22 +23,25 @@ func main() {
 }
 
 func DisplayMenuAndGetChoice() int {
-	fmt.Println("Choose an action:")
-	fmt.Println("1. Add employee")
-	fmt.Println("2. Get employee by ID")
-	fmt.Println("3. Update employee")
-	fmt.Println("4. Delete employee")
-	fmt.Println("5. Show all employees")
-	fmt.Println("6. Create employees table")
-	fmt.Println("7. Insert initial data")
-	fmt.Println("8. Drop Table ")
-	fmt.Println("9. Exit")
+	fmt.Println("\n\033[31;1m╔══════════════════════════════════╗\033[0m")
+	fmt.Println("\033[31;1m║*** Employee Management System ***║\033[0m")
+	fmt.Println("\033[31;1m╚══════════════════════════════════╝\033[0m")
+
+	fmt.Println("\033[32;1m1. Add Employee\033[0m")
+	fmt.Println("\033[33;1m2. Get Employee by ID\033[0m")
+	fmt.Println("\033[34;1m3. Update Employee\033[0m")
+	fmt.Println("\033[35;1m4. Delete Employee\033[0m")
+	fmt.Println("\033[36;1m5. Show All Employees\033[0m")
+	fmt.Println("\033[31;1m6. Create Employees Table\033[0m")
+	fmt.Println("\033[32;1m7. Insert Initial Data\033[0m")
+	fmt.Println("\033[33;1m8. Drop Employees Table\033[0m")
+	fmt.Println("\033[34;1m9. Exit\033[0m")
 
 	var choice int
-	fmt.Print("Enter the action number: ")
+	fmt.Print("\n\033[32;1mEnter your choice: \033[0m")
 	_, err := fmt.Scan(&choice)
 	if err != nil {
-		fmt.Println("Error in input. Try again.")
+		fmt.Println("Invalid input. Please try again.")
 		return DisplayMenuAndGetChoice()
 	}
 
